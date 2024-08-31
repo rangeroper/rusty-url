@@ -23,14 +23,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Navigate to Terraform Directory
-      run: cd rustyurl-iac  # Change to the Terraform directory
-
-    - name: Initialize Terraform
-      run: terraform init
-
-    - name: Apply Terraform for ECR Only
-      run: cd rustyurl-iac && terraform apply -target=aws_ecr_repository.rustyurl_backend -auto-approve
+    - name: Initialize and Apply Terraform for ECR Only
+      run: |
+        cd rustyurl-iac
+        terraform init
+        terraform apply -target=aws_ecr_repository.rustyurl_backend -auto-approve
 
     - name: Get ECR Repository URL
       id: get_ecr_url
@@ -38,7 +35,6 @@ jobs:
         cd rustyurl-iac
         ECR_URL=$(terraform output -raw ecr_repository_url)
         echo "ECR_URL=$ECR_URL" >> $GITHUB_ENV
-    
 
     - name: Log in to Amazon ECR
       run: |
@@ -51,7 +47,9 @@ jobs:
         docker push ${{ env.ECR_URL }}:latest
 
     - name: Apply Remaining Terraform Configuration
-      run: cd rustyurl-iac && terraform apply -auto-approve
+      run: 
+        cd rustyurl-iac
+        terraform apply -auto-approve
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
