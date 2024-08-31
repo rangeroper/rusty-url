@@ -11,13 +11,15 @@ output "instance_public_ip" {
 }
 
 output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table"
-  value       = aws_dynamodb_table.url_shortener.name
+  value       = aws_dynamodb_table.url_shortener[0].name
+  description = "The name of the DynamoDB table used for the URL shortener."
+  condition   = length(aws_dynamodb_table.url_shortener) > 0
 }
 
 output "security_group_id" {
-  description = "Security Group ID of the RustyURL instance"
-  value       = aws_security_group.rustyurl_sg.id
+  value       = aws_security_group.rustyurl_sg[0].id
+  description = "The ID of the security group."
+  condition   = length(aws_security_group.rustyurl_sg) > 0
 }
 
 output "ec2_instance_id" {
