@@ -47,7 +47,7 @@ jobs:
         docker push ${{ env.ECR_URL }}:latest
 
     - name: Apply Remaining Terraform Configuration
-      run: 
+      run: |
         cd rustyurl-iac
         terraform apply -auto-approve
       env:
