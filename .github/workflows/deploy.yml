@@ -23,10 +23,31 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Initialize and Apply Terraform for ECR Only
+    - name: Initialize Terraform
       run: |
         cd rustyurl-iac
         terraform init
+
+    - name: Check if ECR Repository Exists
+      id: check_ecr
+      run: |
+        if aws ecr describe-repositories --repository-names rustyurl-backend --region us-east-1; then
+          echo "ECR repository exists."
+          echo "IMPORT_ECR=true" >> $GITHUB_ENV
+        else
+          echo "ECR repository does not exist."
+          echo "IMPORT_ECR=false" >> $GITHUB_ENV
+        fi
+
+    - name: Import Existing ECR Repository if Exists
+      if: env.IMPORT_ECR == 'true'
+      run: |
+        cd rustyurl-iac
+        terraform import aws_ecr_repository.rustyurl_backend rustyurl-backend
+
+    - name: Apply Terraform for ECR Only
+      run: |
+        cd rustyurl-iac
         terraform apply -target=aws_ecr_repository.rustyurl_backend -auto-approve
 
     - name: Get ECR Repository URL
@@ -35,7 +56,7 @@ jobs:
         cd rustyurl-iac
         ECR_URL=$(terraform output -raw ecr_repository_url)
         echo "ECR_URL=$ECR_URL" >> $GITHUB_ENV
-
+    
     - name: Log in to Amazon ECR
       run: |
         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ env.ECR_URL }}
