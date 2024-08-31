@@ -24,9 +24,8 @@ resource "aws_dynamodb_table" "url_shortener" {
   }
 }
 
-# Check if Security Group Exists
+# Data Source to Check for Existing Security Group
 data "aws_security_group" "existing_rustyurl_sg" {
-  count = length(local.existing_security_group_ids) > 0 ? 1 : 0
   filter {
     name   = "group-name"
     values = ["rustyurl-sg"]
@@ -35,7 +34,7 @@ data "aws_security_group" "existing_rustyurl_sg" {
 
 # Security Group for EC2 Instance
 resource "aws_security_group" "rustyurl_sg" {
-  count       = data.aws_security_group.existing_rustyurl_sg.count == 0 ? 1 : 0
+  count       = length(data.aws_security_group.existing_rustyurl_sg.ids) == 0 ? 1 : 0
   name        = "rustyurl-sg"
   description = "Security group for RustyURL EC2 instance"
 
@@ -69,7 +68,7 @@ resource "aws_security_group" "rustyurl_sg" {
 resource "aws_instance" "rustyurl_instance" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
-  vpc_security_group_ids = data.aws_security_group.existing_rustyurl_sg.count > 0 ? [data.aws_security_group.existing_rustyurl_sg[0].id] : [aws_security_group.rustyurl_sg[0].id]
+  vpc_security_group_ids = data.aws_security_group.existing_rustyurl_sg.ids != [] ? [data.aws_security_group.existing_rustyurl_sg.ids[0]] : [aws_security_group.rustyurl_sg[0].id]
   key_name               = var.key_name
 
   user_data = <<-EOF
