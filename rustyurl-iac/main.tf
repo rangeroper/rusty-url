@@ -63,3 +63,41 @@ resource "aws_security_group" "rustyurl_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+# EC2 Instance to Run Rust Backend
+resource "aws_instance" "rustyurl_instance" {
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  vpc_security_group_ids = length(data.aws_security_group.existing_rustyurl_sg.ids) > 0 ? [data.aws_security_group.existing_rustyurl_sg.ids[0]] : [aws_security_group.rustyurl_sg[0].id]
+  key_name               = var.key_name
+
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo apt update -y
+              sudo apt install docker.io -y
+              aws ecr get-login-password --region ${var.aws_region} | sudo docker login --username AWS --password-stdin ${aws_ecr_repository.rustyurl_backend.repository_url}
+              sudo docker pull ${aws_ecr_repository.rustyurl_backend.repository_url}:latest
+              sudo docker run -d -p ${var.app_port}:${var.app_port} ${aws_ecr_repository.rustyurl_backend.repository_url}:latest
+              EOF
+
+  tags = {
+    Name = "RustyURL-Instance"
+  }
+}
+
+# ECR Repository for Docker Images
+resource "aws_ecr_repository" "rustyurl_backend" {
+  name = "rustyurl-backend"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  tags = {
+    Name = "RustyURL ECR Repository"
+  }
+}
