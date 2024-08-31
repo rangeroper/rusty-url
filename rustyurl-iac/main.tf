@@ -71,16 +71,6 @@ resource "aws_instance" "rustyurl_instance" {
               sudo yum update -y
               sudo yum install docker -y
               sudo service docker start
-              sudo yum install -y aws-cli
-              
-              # Configure AWS CLI with static credentials
-              mkdir -p ~/.aws
-              echo "[default]" > ~/.aws/credentials
-              echo "aws_access_key_id=${var.aws_access_key_id}" >> ~/.aws/credentials
-              echo "aws_secret_access_key=${var.aws_secret_access_key}" >> ~/.aws/credentials
-              echo "[default]" > ~/.aws/config
-              echo "region=${var.aws_region}" >> ~/.aws/config
-              
               aws ecr get-login-password --region ${var.aws_region} | sudo docker login --username AWS --password-stdin ${aws_ecr_repository.rustyurl_backend.repository_url}
               sudo docker pull ${aws_ecr_repository.rustyurl_backend.repository_url}:latest
               sudo docker run -d -p ${var.app_port}:${var.app_port} ${aws_ecr_repository.rustyurl_backend.repository_url}:latest
