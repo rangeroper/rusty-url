@@ -23,6 +23,7 @@ resource "aws_security_group" "rustyurl_sg" {
   name        = "rustyurl-sg"
   description = "Security group for RustyURL EC2 instance"
 
+  # Allow inbound traffic on port 8080 for the URL shortener application
   ingress {
     from_port   = var.app_port
     to_port     = var.app_port
@@ -30,6 +31,16 @@ resource "aws_security_group" "rustyurl_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow inbound SSH access on port 22 from your IP or any IP (replace "YOUR_IP_ADDRESS/32" with your specific IP for better security)
+  ingress {
+    description = "Allow SSH traffic on port 22"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Use your IP in CIDR format for more secure access, e.g., ["203.0.113.0/32"]
+  }
+
+  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
