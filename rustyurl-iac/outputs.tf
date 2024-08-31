@@ -16,8 +16,7 @@ output "dynamodb_table_name" {
 }
 
 output "security_group_id" {
-  description = "The ID of the security group."
-  value       = aws_security_group.rustyurl_sg.id
+  value = length(aws_security_group.rustyurl_sg) > 0 ? aws_security_group.rustyurl_sg[0].id : data.aws_security_group.existing_rustyurl_sg.id
 }
 
 output "ec2_instance_id" {
