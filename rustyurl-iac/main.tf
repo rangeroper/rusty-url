@@ -7,6 +7,14 @@ data "aws_dynamodb_table" "existing_url_shortener" {
   name = var.dynamodb_table_name
 }
 
+# Data Source to Check for Existing Security Group
+data "aws_security_group" "existing_rustyurl_sg" {
+  filter {
+    name   = "group-name"
+    values = ["rustyurl-sg"]
+  }
+}
+
 # DynamoDB Table for URL Shortener
 resource "aws_dynamodb_table" "url_shortener" {
   count          = length(data.aws_dynamodb_table.existing_url_shortener.id) == 0 ? 1 : 0
@@ -24,8 +32,10 @@ resource "aws_dynamodb_table" "url_shortener" {
   }
 }
 
-# Always create the Security Group for EC2 Instance
+# Security Group for EC2 Instance (only create if it does not already exist)
 resource "aws_security_group" "rustyurl_sg" {
+  count = length(data.aws_security_group.existing_rustyurl_sg.id) == 0 ? 1 : 0
+  
   name        = "rustyurl-sg"
   description = "Security group for RustyURL EC2 instance"
 
