@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "url_shortener" {
   }
 }
 
-# Security Group for EC2 Instance (always create)
+# Always create the Security Group for EC2 Instance
 resource "aws_security_group" "rustyurl_sg" {
   name        = "rustyurl-sg"
   description = "Security group for RustyURL EC2 instance"
