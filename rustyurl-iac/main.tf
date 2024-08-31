@@ -76,8 +76,8 @@ resource "aws_instance" "rustyurl_instance" {
               # Configure AWS CLI with static credentials
               mkdir -p ~/.aws
               echo "[default]" > ~/.aws/credentials
-              echo "aws_access_key_id=${AWS_ACCESS_KEY_ID}" >> ~/.aws/credentials
-              echo "aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
+              echo "aws_access_key_id=${var.aws_access_key_id}" >> ~/.aws/credentials
+              echo "aws_secret_access_key=${var.aws_secret_access_key}" >> ~/.aws/credentials
               echo "[default]" > ~/.aws/config
               echo "region=${var.aws_region}" >> ~/.aws/config
               
