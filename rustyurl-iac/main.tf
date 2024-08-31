@@ -24,20 +24,17 @@ resource "aws_dynamodb_table" "url_shortener" {
   }
 }
 
-# Attempt to find an existing Security Group
+# Data Source to Check for Existing Security Group
 data "aws_security_group" "existing_rustyurl_sg" {
   filter {
     name   = "group-name"
     values = ["rustyurl-sg"]
   }
-
-  # Ignore errors if the security group does not exist
-  count = length([for sg in aws_security_group.rustyurl_sg : sg.id]) == 0 ? 0 : 1
 }
 
 # Security Group for EC2 Instance
 resource "aws_security_group" "rustyurl_sg" {
-  count       = length(data.aws_security_group.existing_rustyurl_sg) == 0 ? 1 : 0
+  count       = length(data.aws_security_group.existing_rustyurl_sg.ids) == 0 ? 1 : 0
   name        = "rustyurl-sg"
   description = "Security group for RustyURL EC2 instance"
 
