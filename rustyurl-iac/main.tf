@@ -59,17 +59,70 @@ resource "aws_security_group" "rustyurl_sg" {
   }
 }
 
+# IAM Policy for EC2 to access ECR
+resource "aws_iam_policy" "ecr_policy" {
+  name        = "RustyURL_ECR_Policy"
+  description = "Policy to allow EC2 instance to access ECR"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# IAM Role for EC2
+resource "aws_iam_role" "ec2_role" {
+  name = "RustyURL_EC2_Role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Attach IAM Policy to IAM Role
+resource "aws_iam_role_policy_attachment" "ecr_policy_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.ecr_policy.arn
+}
+
+# IAM Instance Profile for EC2
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "RustyURL_EC2_Instance_Profile"
+  role = aws_iam_role.ec2_role.name
+}
+
 # EC2 Instance to Run Rust Backend
 resource "aws_instance" "rustyurl_instance" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.rustyurl_sg.id]
   key_name               = var.key_name
+  iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt update -y
-              sudo apt install docker.io -y
+              sudo yum update -y
+              sudo yum install docker -y
+              sudo service docker start
               aws ecr get-login-password --region ${var.aws_region} | sudo docker login --username AWS --password-stdin ${aws_ecr_repository.rustyurl_backend.repository_url}
               sudo docker pull ${aws_ecr_repository.rustyurl_backend.repository_url}:latest
               sudo docker run -d -p ${var.app_port}:${var.app_port} ${aws_ecr_repository.rustyurl_backend.repository_url}:latest
