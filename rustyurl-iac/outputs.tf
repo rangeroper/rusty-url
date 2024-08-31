@@ -12,7 +12,7 @@ output "instance_public_ip" {
 
 output "dynamodb_table_name" {
   description = "The name of the DynamoDB table used for the URL shortener."
-  value       = aws_dynamodb_table.url_shortener[0].name
+  value       = length(aws_dynamodb_table.url_shortener) > 0 ? aws_dynamodb_table.url_shortener[0].name : data.aws_dynamodb_table.existing_url_shortener.name
 }
 
 output "security_group_id" {
