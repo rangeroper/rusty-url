@@ -49,6 +49,9 @@ jobs:
       run: |
         cd rustyurl-iac
         terraform apply -target=aws_ecr_repository.rustyurl_backend -auto-approve
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     - name: Get ECR Repository URL
       id: get_ecr_url
